@@ -14,8 +14,21 @@ SECRET_KEY = 'django-insecure-vig^62&r(hs_8k60_@u7zn)00&#q_r1hn8us6@d+_(g6^ayn9k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', '54.166.169.37', '98.81.159.86', 'localhost', '127.0.0.1']
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+    'http://44.204.179.252',
+    '*',
+]
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000/',
+    'http://localhost:3000',
+    'http://192.168.10.22:8000',
+]
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 
@@ -26,14 +39,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
     'rest_framework',
     'email_app_management',
     'utils_app',
     'rest_framework.authtoken',
 
 ]
+CORS_ORIGIN_ALLOW_ALL = True
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,6 +93,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    'secondary': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db_secondary.sqlite3',
     }
 }
 

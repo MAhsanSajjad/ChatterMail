@@ -10,6 +10,12 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.core.mail import EmailMessage
 from django.conf import settings
+from rest_framework.generics import ListAPIView
+from .pagination import StandardResultSetPagination
+from rest_framework import filters
+from django_filters.rest_framework import DjangoFilterBackend
+from django.core.mail import send_mail
+
 # Create your views here.
 
 class CustomerCreateAPIView(APIView):
@@ -208,4 +214,264 @@ class UniversityAPIView(APIView):
         return Response({
             'success': True,
             'response': {'message': 'University created successfully.', 'university_id': university.id}
+        }, status=status.HTTP_201_CREATED)
+        
+        
+class CreateTeacherAPIView(APIView):
+    def post(self, request):
+        name = request.data.get('name')
+        department = request.data.get('department')
+        designation = request.data.get('designation')
+
+        if not name or not department or not designation:
+            return Response(
+                {
+                    "success": False,
+                    "response": {
+                        "message": "All fields are required!"
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+
+        serializer = TeacherInfoSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return Response(
+                    {
+                        "success": True,
+                        "response": serializer.data
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                return Response(
+                    {
+                        "success": False,
+                        "response": {
+                            "message": str(e)
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        return Response(
+            {
+                "success": False,
+                "response": serializer.errors
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class TeacherListAPIView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = TeacherInfoListSerializer
+    pagination_class = StandardResultSetPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['name']
+    filterset_fields = ['name']
+
+    def get(self, request, *args, **kwargs):
+        teacher_id = self.kwargs.get('id')
+        if teacher_id:
+            teacher = TeacherInfo.objects.filter(id=teacher_id).first()
+            if not teacher:
+                return Response({"success": False, "message": "Teacher not found"}, status=404)
+            serializer = self.get_serializer(teacher)
+            return Response({"success": True, "data": serializer.data}, status=200)
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return TeacherInfo.objects.all()
+    
+
+class PublicCustomerCreateAPIView(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny] 
+
+    def post(self, request):
+        name = request.data.get('name')
+        phone_number = request.data.get('phone_number')
+        address = request.data.get('address')
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        # Validate required fields
+        if not name or not phone_number:
+            return Response({
+                'success': False,
+                'response': {'message': 'name and phone_number are required!'}
+            }, status=400)
+
+        if not username or not password:
+            return Response({
+                'success': False,
+                'response': {'message': 'username and password are required!'}
+            }, status=400)
+
+        # Check for duplicate username
+        if User.objects.filter(username=username).exists():
+            return Response({
+                'success': False,
+                'response': {'message': 'Username already exists!'}
+            }, status=400)
+
+        # Create user
+        user = User.objects.create_user(username=username, password=password)
+        wallet, created = Wallet.objects.get_or_create(user=user)
+
+        # Create customer linked to user
+        customer = Customer.objects.create(
+            user=user,
+            name=name,
+            phone_number=phone_number,
+            address=address
+        )
+
+        serializer = CustomerSerializer(customer)
+        return Response({'success': True, 'response': serializer.data}, status=201)
+    
+    
+    
+class ItemsAPIView(APIView):
+    def post(self, request):
+        items = Items.objects.create(
+            item_name = request.data.get('item_name'),
+            item_description = request.data.get('item_description'),
+            item_price = request.data.get('item_price')
+            
+        )
+        serializer = ItemsSerializer(items)
+        return Response({
+            'success': True,
+            'response': serializer.data
+        }, status=status.HTTP_201_CREATED)
+        
+        
+class OrderAPIView(APIView):
+    def post(self, request):
+        customer_id = request.data.get('customer_id')
+        item_ids = request.data.get('item_ids', [])
+
+        if not customer_id or not item_ids:
+            return Response({
+                'success': False,
+                'response': {'message': 'Customer ID and item IDs are required.'}
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        customer = Customer.objects.filter(id=customer_id).first()
+        if not customer:
+            return Response({
+                'success': False,
+                'response': {'message': 'Customer not found.'}
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        items = Items.objects.filter(id__in=item_ids)
+        if not items.exists():
+            return Response({
+                'success': False,
+                'response': {'message': 'No valid items found.'}
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        order = Order.objects.create(customer=customer)
+        order.items.set(items)  # Set ManyToMany field
+        order.save()
+
+        serializer = OrderSerializer(order)
+        return Response({
+            'success': True,
+            'response': serializer.data
+        }, status=status.HTTP_201_CREATED)
+        
+        
+
+
+class CreatePaymentAPIView(APIView):
+    def post(self, request):
+        customer_id = request.data.get('customer_id')
+        order_id = request.data.get('order_id')
+
+        if not customer_id or not order_id:
+            return Response({
+                "success": False,
+                "message": "customer_id and order_id are required."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        customer = Customer.objects.filter(id=customer_id).first()
+        if not customer:
+            return Response({
+                "success": False,
+                "message": "Customer not found."
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        order = Order.objects.filter(id=order_id, customer=customer).first()
+        if not order:
+            return Response({
+                "success": False,
+                "message": "Order not found for this customer."
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if order.payment_type == 'paid':
+            return Response({
+                "success": False,
+                "message": "Payment already completed for this order."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if order.total_amount is None:
+            return Response({
+                "success": False,
+                "message": "Order has no total amount yet."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        wallet = Wallet.objects.filter(user=customer.user).first()
+        if not wallet:
+            return Response({
+                "success": False,
+                "message": "Wallet not found for this customer."
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        if wallet.balance < order.total_amount:
+            return Response({
+                "success": False,
+                "message": "Insufficient wallet balance."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Deduct the amount
+        wallet.balance -= order.total_amount
+        wallet.save()
+
+        # Mark the order as paid
+        order.payment_type = 'paid'
+        order.save(update_fields=['payment_type'])
+
+        # Create the payment record
+        payment = Payment.objects.create(customer=customer, order=order)
+
+        # Send email confirmation
+        email_to = customer.user.email
+        if email_to:
+            item_names = ", ".join([item.item_name for item in order.items.all()])
+            amount = order.total_amount
+
+            send_mail(
+                subject="Payment Confirmation",
+                message=(
+                    f"Hi {customer.name},\n\n"
+                    f"Your payment of {amount} has been received for the following items:\n"
+                    f"{item_names}\n\n"
+                    f"Thank you for your order!"
+                ),
+                from_email="noreply@example.com",
+                recipient_list=[email_to],
+                fail_silently=False,
+            )
+
+        return Response({
+            "success": True,
+            "message": f"Payment successful. Amount {order.total_amount} deducted from wallet.",
+            "wallet_balance": wallet.balance
         }, status=status.HTTP_201_CREATED)
