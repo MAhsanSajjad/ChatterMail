@@ -121,3 +121,13 @@ class Payment(BaseModelWithCreatedInfo):
     
     def __str__(self):
         return f"{self.customer.name} order for {self.order.total_amount}"
+    
+    
+class PaymentHistory(BaseModelWithCreatedInfo):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Payment of {self.amount} for {self.order.id} by {self.customer.name}"

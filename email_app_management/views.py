@@ -451,27 +451,56 @@ class CreatePaymentAPIView(APIView):
         # Create the payment record
         payment = Payment.objects.create(customer=customer, order=order)
 
-        # Send email confirmation
-        email_to = customer.user.email
-        if email_to:
-            item_names = ", ".join([item.item_name for item in order.items.all()])
-            amount = order.total_amount
-
-            send_mail(
-                subject="Payment Confirmation",
-                message=(
-                    f"Hi {customer.name},\n\n"
-                    f"Your payment of {amount} has been received for the following items:\n"
-                    f"{item_names}\n\n"
-                    f"Thank you for your order!"
-                ),
-                from_email="noreply@example.com",
-                recipient_list=[email_to],
-                fail_silently=False,
-            )
+        # ✅ Create the payment history record
+        PaymentHistory.objects.create(
+            customer=customer,
+            order=order,
+            amount=order.total_amount
+        )
 
         return Response({
             "success": True,
             "message": f"Payment successful. Amount {order.total_amount} deducted from wallet.",
             "wallet_balance": wallet.balance
         }, status=status.HTTP_201_CREATED)
+
+
+
+
+
+class CheckPaymentStatusAPIView(APIView):
+    def post(self, request):
+        customer_id = request.data.get('customer_id')
+        order_id = request.data.get('order_id')
+
+        if not customer_id or not order_id:
+            return Response({
+                'success': False,
+                'message': 'customer_id and order_id are required.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        customer = Customer.objects.filter(id=customer_id).first()
+        if not customer:
+            return Response({
+                'success': False,
+                'message': 'Customer not found.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        order = Order.objects.filter(id=order_id, customer=customer).first()
+        if not order:
+            return Response({
+                'success': False,
+                'message': 'Order not found for this customer.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # ✅ Option 1: Check Payment record
+        payment_exists = Payment.objects.filter(customer=customer, order=order).exists()
+
+        # ✅ Option 2: You can also check order.payment_type == 'paid'
+
+        return Response({
+            'success': True,
+            'paid': payment_exists,
+            'payment_type': order.payment_type,
+            'total_amount': order.total_amount
+        }, status=status.HTTP_200_OK)

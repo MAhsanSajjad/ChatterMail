@@ -13,7 +13,8 @@ urlpatterns = [
     path('public-create-customer/', views.PublicCustomerCreateAPIView.as_view()),
     path('items/', views.ItemsAPIView.as_view()),
     path('orders/', views.OrderAPIView.as_view()),
-    path('payment/', views.CreatePaymentAPIView.as_view())
+    path('payment/', views.CreatePaymentAPIView.as_view()),
+    path('check-payment-status/', views.CheckPaymentStatusAPIView.as_view()),
 
 
 

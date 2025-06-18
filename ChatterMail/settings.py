@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'email_app_management',
     'utils_app',
     'rest_framework.authtoken',
+    'django_celery_beat',
+    'channels',
 
 ]
 CORS_ORIGIN_ALLOW_ALL = True
@@ -78,8 +80,17 @@ TEMPLATES = [
 ]
 
 
-WSGI_APPLICATION = 'ChatterMail.wsgi.application'
+# WSGI_APPLICATION = 'ChatterMail.wsgi.application'
+ASGI_APPLICATION = 'ChatterMail.asgi.application'
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -100,6 +111,20 @@ DATABASES = {
     }
 }
 
+from celery.schedules import crontab
+from datetime import timedelta
+
+# CELERY_BEAT_SCHEDULE = {
+#     'delete-old-payment-history': {
+#         'task': 'email_app_management.tasks.delete_old_payment_history',
+#         'schedule': timedelta(minutes=1),
+#     },
+#     'send-unpaid-reminders-every-5-min': {
+#         'task': 'email_app_management.tasks.send_unpaid_order_reminders',
+#         'schedule': timedelta(minutes=5),
+#     },
+# }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -119,13 +144,29 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# for Docker
+# CELERY_BROKER_URL = 'redis://redis:6379/0'
+# CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
+# for local
+# settings.py
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Use redis as broker
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Karachi'
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Karachi'
 
 USE_I18N = True
 

@@ -72,3 +72,7 @@ class CompanynameAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('created_at',)
 
+
+@admin.register(PaymentHistory)
+class PaymentHistoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'customer', 'order', 'amount', 'created_at')
