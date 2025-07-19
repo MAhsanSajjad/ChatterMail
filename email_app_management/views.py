@@ -573,3 +573,4 @@ class EmployeeUpdateAPIView(APIView):
             return Response({'success':False, 'response': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
+
