@@ -15,6 +15,7 @@ urlpatterns = [
     path('orders/', views.OrderAPIView.as_view()),
     path('payment/', views.CreatePaymentAPIView.as_view()),
     path('check-payment-status/', views.CheckPaymentStatusAPIView.as_view()),
+    path('salary/<int:id>/', views.EmployeeSalaryAPIView.as_view())
 
 
 

@@ -85,3 +85,8 @@ class EmployeeAdmin(admin.ModelAdmin):
 @admin.register(EmployeeAttendace)
 class EmployeeAttendanceAdmin(admin.ModelAdmin):
     list_display = ['employee', 'date', 'status']
+    
+    
+@admin.register(EmployeeSalary)
+class EmployeeSalaryAdmin(admin.ModelAdmin):
+    list_display = ['id', 'employee', 'salary']

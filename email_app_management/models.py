@@ -141,9 +141,16 @@ class Employee(BaseModelWithCreatedInfo):
         return self.name
     
 class EmployeeAttendace(BaseModelWithCreatedInfo):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, blank=True)
     date = models.DateField()
     status = models.CharField(max_length=20, choices=ATTENDANCE_CHOICES, default='present')
 
     def __str__(self):
         return f"{self.employee.name} - {self.date} - {self.status}"
+    
+class EmployeeSalary(BaseModelWithCreatedInfo):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, blank=True)
+    salary = models.DecimalField(max_digits=10, default=0, decimal_places=2)
+    
+    def __str__(self):
+        return self.employee.name

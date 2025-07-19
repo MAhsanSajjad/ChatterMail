@@ -504,3 +504,37 @@ class CheckPaymentStatusAPIView(APIView):
             'payment_type': order.payment_type,
             'total_amount': order.total_amount
         }, status=status.HTTP_200_OK)
+        
+        
+        
+class EmployeeSalaryAPIView(APIView):
+    def post(self, request, id):
+        salary = request.data.get('salary')
+
+        if salary is None:
+            return Response({
+                'success': False,
+                'response': {'message': 'Salary is required!'}
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            salary = float(salary)
+        except ValueError:
+            return Response({
+                'success': False,
+                'response': {'message': 'Invalid salary format!'}
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        employee = Employee.objects.filter(id=id).first()
+        if not employee:
+            return Response({
+                'success': False,
+                'response': {'message': 'Employee not found!'}
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        EmployeeSalary.objects.create(employee=employee, salary=salary)
+
+        return Response({
+            'success': True,
+            'response': {'message': 'Salary added successfully.'}
+        }, status=status.HTTP_201_CREATED)
