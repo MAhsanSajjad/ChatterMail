@@ -571,3 +571,4 @@ class EmployeeUpdateAPIView(APIView):
             return Response({'success':True, 'response': {'message': 'Employee data updated Successfully!'}}, status=status.HTTP_200_OK)
         else:
             return Response({'success':False, 'response': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
