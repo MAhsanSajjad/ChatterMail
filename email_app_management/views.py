@@ -543,3 +543,21 @@ class EmployeeSalaryAPIView(APIView):
         salary = EmployeeSalary.objects.filter(id=id).first()
         salary.delete()
         return Response({'success':True, 'response': {'message': 'salary deleted successfully!'}}, status=status.HTTP_200_OK)
+    
+    
+    
+class EmployeeAPIView(APIView):
+    def post(self, request):
+        name = request.data.get('name')
+        if name is None:
+            return Response({'success': False, 'response': {'message': 'Name is required!'}}, status=status.HTTP_400_BAD_REQUEST)
+        if Employee.objects.filter(name=name).exists():
+            return Response({'suceess':False, 'response': {'message': 'This name is already taken!'}}, status=status.HTTP_400_BAD_REQUEST)
+        # Create serializer instance with data
+        serializer = EmployeeSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()  # This creates and saves the Employee object
+            return Response({'success': True, 'response': {'message': 'Employee created successfully!'}}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({'success': False, 'response': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

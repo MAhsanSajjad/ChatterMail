@@ -136,7 +136,7 @@ class PaymentHistory(BaseModelWithCreatedInfo):
     
 class Employee(BaseModelWithCreatedInfo):
     name = models.CharField(max_length=200)
-    designation = models.CharField(max_length=100, choices=DESIGNATION_CHOICES)
+    designation = models.CharField(max_length=100, choices=DESIGNATION_CHOICES, default='staff')
     def __str__(self):
         return self.name
     
