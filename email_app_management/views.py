@@ -538,3 +538,8 @@ class EmployeeSalaryAPIView(APIView):
             'success': True,
             'response': {'message': 'Salary added successfully.'}
         }, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, id):
+        salary = EmployeeSalary.objects.filter(id=id).first()
+        salary.delete()
+        return Response({'success':True, 'response': {'message': 'salary deleted successfully!'}}, status=status.HTTP_200_OK)
