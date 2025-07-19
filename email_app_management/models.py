@@ -131,3 +131,19 @@ class PaymentHistory(BaseModelWithCreatedInfo):
     
     def __str__(self):
         return f"Payment of {self.amount} for {self.order.id} by {self.customer.name}"
+    
+    
+    
+class Employee(BaseModelWithCreatedInfo):
+    name = models.CharField(max_length=200)
+    designation = models.CharField(max_length=100, choices=DESIGNATION_CHOICES)
+    def __str__(self):
+        return self.name
+    
+class EmployeeAttendace(BaseModelWithCreatedInfo):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    date = models.DateField()
+    status = models.CharField(max_length=20, choices=ATTENDANCE_CHOICES, default='present')
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.date} - {self.status}"

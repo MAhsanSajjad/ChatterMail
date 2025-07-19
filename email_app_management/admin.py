@@ -76,3 +76,12 @@ class CompanynameAdmin(admin.ModelAdmin):
 @admin.register(PaymentHistory)
 class PaymentHistoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'customer', 'order', 'amount', 'created_at')
+    
+    
+@admin.register(Employee)
+class EmployeeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'designation']
+    
+@admin.register(EmployeeAttendace)
+class EmployeeAttendanceAdmin(admin.ModelAdmin):
+    list_display = ['employee', 'date', 'status']

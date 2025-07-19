@@ -145,8 +145,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # for Docker
-# CELERY_BROKER_URL = 'redis://redis:6379/0'
-# CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 # for local
 # settings.py
